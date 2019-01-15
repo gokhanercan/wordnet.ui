@@ -14,6 +14,8 @@ import com.vaadin.ui.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * This UI is the application entry point. A UI may either represent a browser window 
@@ -46,7 +48,11 @@ public class WordNetUI extends UI {
             System.out.println("Length of results " + results.size());
             for (SynSet result : results) {
                 treeData.addItem(null, result.representative());
+                treeData.addItem(result.representative(), result.getPos().toString());
                 treeData.addItem(result.representative(), result.getDefinition());
+                treeData.addItem(result.representative(), result.getLongDefinition());
+                treeData.addItem(result.representative(), result.getExample());
+                treeData.addItem(result.representative(), result.getSynonym().toString());
                 //treeData.removeItem("Mercury");
                 inMemoryDataProvider.refreshAll();
                 temp.setValue(temp.getValue() + result.representative());
@@ -55,14 +61,75 @@ public class WordNetUI extends UI {
         });
 
         searchBtn.addClickListener(e -> {
+            treeData.clear();
+            inMemoryDataProvider.refreshAll();
             temp.setValue("I am clicked2");
             ArrayList<SynSet> results = turkish.getSynSetsWithLiteral(searchBox.getSearchLiteral());
-            Collection<String> x = turkish.literalList();
-            System.out.println("Length of literals" + x.size());
             temp.setValue(temp.getValue()  + " " + searchBox.getSearchLiteral() + " " + results.size());
+
+            Set<String> posList = new HashSet<>();
             for (SynSet result : results) {
+                String example = result.getExample();
+                String pos = result.getPos().toString();
+                String synset = "(" + pos + ") " + result.representative() + " (" + result.getDefinition() + ")";
+                System.out.println("Synonyms" + result.getSynonym().toString());
+                System.out.println("litetal size" + result.getSynonym().literalSize());
+
+                if(example != null){
+                    synset += " \"" + example + "\"";
+                }
+                if(!posList.contains(pos)){
+                    treeData.addItem(null, pos);
+                    posList.add(pos);
+                }
+                treeData.addItem(result.getPos().toString(), synset);
+                int relSize = result.relationSize();
+                if (relSize > 0) {
+                    System.out.println("Relations:");
+                    ArrayList<SynSet> hypernyms = new ArrayList<SynSet>();
+                    ArrayList<SynSet> hyponyms = new ArrayList<SynSet>();
+                    for (int j = 0; j < relSize; j++) {
+                        Relation relation = result.getRelation(j);
+                        System.out.println(relation.getName() + " " + relation);
+                        if (relation instanceof SemanticRelation) {
+                            if (((SemanticRelation) relation).getRelationType().equals(SemanticRelationType.HYPERNYM)) {
+                                hypernyms.add(turkish.getSynSetWithId(relation.getName()));
+                            } else if (((SemanticRelation) relation).getRelationType().
+                                    equals(SemanticRelationType.HYPONYM)) {
+                                hyponyms.add(turkish.getSynSetWithId(relation.getName()));
+                            }
+                        }
+                    }
+                    if (hypernyms.size() > 0) {
+                        System.out.println("Hypernyms: " + synset);
+                        treeData.addItem(synset, "hypernyms of " + result.representative());
+                        for (SynSet hypernym : hypernyms) {
+                            System.out.println(hypernym.representative());
+                            treeData.addItem("hypernyms of " + result.representative(), hypernym.representative());
+                        }
+
+                    }
+
+                    if (hyponyms.size() > 0) {
+                        System.out.println("Hyponyms of : " + synset);
+                        treeData.addItem(synset, "hyponyms of " + result.representative());
+                        for (SynSet hyponym : hyponyms) {
+                            System.out.println(hyponym.representative());
+                            treeData.addItem("hyponyms of " + result.representative(), hyponym.representative());
+                        }
+
+                    }
+                }
+                /*
                 treeData.addItem(null, result.representative());
+                //treeData.addItem(result.representative(), result.getPos().toString());
                 treeData.addItem(result.representative(), result.getDefinition());
+                //treeData.addItem(result.representative(), result.getLongDefinition());
+                treeData.addItem(result.representative(), result.getExample());
+                treeData.addItem(result.representative(), result.getSynonym().toString());
+                */
+
+                //treeData.removeItem("Mercury");
                 //treeData.removeItem("Mercury");
                 inMemoryDataProvider.refreshAll();
             }
