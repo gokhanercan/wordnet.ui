@@ -43,9 +43,9 @@ public class WordNetUI extends UI {
         Button searchBtn = searchBox.getButton();
 //        TextField debugTextField = new TextField();
 
-        Tree<String> tree = new Tree<>();
-        TreeData<String> treeData = new TreeData<>();
-        TreeDataProvider<String> inMemoryDataProvider = new TreeDataProvider<>(treeData);
+        Tree<TreeItem> tree = new Tree<>();
+        TreeData<TreeItem> treeData = new TreeData<>();
+        TreeDataProvider<TreeItem> inMemoryDataProvider = new TreeDataProvider<>(treeData);
         tree.setDataProvider(inMemoryDataProvider);
         Set<String> leaves = new HashSet<>();
 
@@ -64,6 +64,7 @@ public class WordNetUI extends UI {
             public void itemClick(Tree.ItemClick itemClick) {
                 String searchLiteral = itemClick.getItem().toString();
                 if (leaves.contains(searchLiteral)) {
+                    searchLiteral = searchLiteral.split("-")[0];
                     searchInWordnet(searchLiteral, treeData, inMemoryDataProvider, leaves);
                     searchBox.setSearchLiteral(searchLiteral);
                 }

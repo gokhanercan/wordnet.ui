@@ -14,7 +14,8 @@ import java.util.Set;
 import static isik.wordnet.ui.WordNetUI.turkish;
 
 class Utils {
-    static void searchInWordnet(String searchLiteral, TreeData<String> treeData, TreeDataProvider<String> inMemoryDataProvider, Set<String> leaves) {
+    static void searchInWordnet(String searchLiteral, TreeData<TreeItem> treeData, TreeDataProvider<TreeItem> inMemoryDataProvider,
+                                Set<String> leaves) {
         treeData.clear();
         inMemoryDataProvider.refreshAll();
 //        debugTextField.setValue("I am clicked2");
@@ -25,23 +26,28 @@ class Utils {
         for (SynSet result : results) {
             String example = result.getExample();
             String pos = result.getPos().toString();
-            String synset = "(" + pos + ") " + result.representative() + " (" + result.getDefinition() + ")";
+            String synsetString = "(" + pos + ") " + result.representative() + " (" + result.getDefinition() + ")";
             System.out.println("Synonyms" + result.getSynonym().toString());
-            System.out.println("litetal size" + result.getSynonym().literalSize());
+            System.out.println("literal size" + result.getSynonym().literalSize());
 
             if (example != null) {
-                synset += " \"" + example + "\"";
+                synsetString += " \"" + example + "\"";
             }
-            if (!posList.contains(pos)) {
-                treeData.addItem(null, pos);
+            TreeItem resultWithPosItem = new TreeItem(synsetString, result.getId());
+            System.out.println("posItem" + resultWithPosItem.toString());
+            //if (!posList.contains(pos)) {
+            treeData.addItem(null, resultWithPosItem);
                 posList.add(pos);
-            }
-            treeData.addItem(result.getPos().toString(), synset);
+            //}
+            //TreeItem synsetItem = new TreeItem(synsetString, "");
+            //treeData.addItem(resultWithPosItem, synsetItem);
+
             int relSize = result.relationSize();
             if (relSize > 0) {
                 System.out.println("Relations:");
                 ArrayList<SynSet> hypernyms = new ArrayList<>();
                 ArrayList<SynSet> hyponyms = new ArrayList<>();
+                ArrayList<SynSet> antonyms = new ArrayList<>();
                 for (int j = 0; j < relSize; j++) {
                     Relation relation = result.getRelation(j);
                     System.out.println(relation.getName() + " " + relation);
@@ -51,30 +57,52 @@ class Utils {
                         } else if (((SemanticRelation) relation).getRelationType().
                                 equals(SemanticRelationType.HYPONYM)) {
                             hyponyms.add(turkish.getSynSetWithId(relation.getName()));
+                        } else if (((SemanticRelation) relation).getRelationType().
+                                equals(SemanticRelationType.ANTONYM)) {
+                            antonyms.add(turkish.getSynSetWithId(relation.getName()));
                         }
                     }
                 }
 
                 if (hypernyms.size() > 0) {
-                    System.out.println("Hypernyms: " + synset);
-                    treeData.addItem(synset, "hypernyms of " + result.representative());
+                    System.out.println("Hypernyms: " + synsetString);
+                    System.out.println("Synset strıng ıs:" + synsetString);
+                    System.out.println("Its child is:" + result.representative());
+                    TreeItem resultItem = new TreeItem("Hypernyms of " + result.representative(), result.getId());
+                    treeData.addItem(resultWithPosItem, resultItem);
                     for (SynSet hypernym : hypernyms) {
                         System.out.println(hypernym.representative());
-                        treeData.addItem("hypernyms of " + result.representative(), hypernym.representative());
-                        leaves.add(hypernym.representative());
+                        TreeItem hypernymItem = new TreeItem(hypernym.representative(), hypernym.getId());
+                        treeData.addItem(resultItem, hypernymItem);
+                        leaves.add(hypernymItem.toString());
                     }
 
                 }
 
                 if (hyponyms.size() > 0) {
-                    System.out.println("Hyponyms of : " + synset);
-                    treeData.addItem(synset, "hyponyms of " + result.representative());
+                    System.out.println("Hyponyms of : " + synsetString);
+                    TreeItem resultItem = new TreeItem("Hyponyms of " + result.representative(),
+                            result.getId());
+                    treeData.addItem(resultWithPosItem, resultItem);
                     for (SynSet hyponym : hyponyms) {
                         System.out.println(hyponym.representative());
-                        treeData.addItem("hyponyms of " + result.representative(), hyponym.representative());
-                        leaves.add(hyponym.representative());
+                        TreeItem hyponymItem = new TreeItem(hyponym.representative(), hyponym.getId());
+                        treeData.addItem(resultItem, hyponymItem);
+                        leaves.add(hyponymItem.toString());
                     }
 
+                }
+
+                if (antonyms.size() > 0) {
+                    System.out.println("Antonyms of : " + synsetString);
+                    TreeItem resultItem = new TreeItem("Antonyms of " + result.representative(), result.getId());
+                    treeData.addItem(resultWithPosItem, resultItem);
+                    for (SynSet antonym : antonyms) {
+                        System.out.println(antonym.representative() + "-" + antonym.getId());
+                        TreeItem antonymItem = new TreeItem(antonym.representative(), antonym.getId());
+                        treeData.addItem(resultItem, antonymItem);
+                        leaves.add(antonymItem.toString());
+                    }
                 }
             }
         }
