@@ -8,21 +8,55 @@ import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.TreeDataProvider;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Set;
 
+import static isik.wordnet.ui.WordNetUI.english;
 import static isik.wordnet.ui.WordNetUI.turkish;
 
 class Utils {
+    private static SemanticRelationType[] RELATIONS_TO_DISPLAY = {SemanticRelationType.HYPERNYM,
+            SemanticRelationType.HYPONYM, SemanticRelationType.ANTONYM, SemanticRelationType.ALSO_SEE,
+            SemanticRelationType.MEMBER_HOLONYM, SemanticRelationType.SUBSTANCE_HOLONYM, SemanticRelationType.PART_HOLONYM,
+            SemanticRelationType.MEMBER_MERONYM, SemanticRelationType.SUBSTANCE_MERONYM, SemanticRelationType.PART_MERONYM,
+            SemanticRelationType.DOMAIN_TOPIC, SemanticRelationType.INSTANCE_HYPERNYM};
+
+    private static void addRelationSynsetsToTree(ArrayList<SynSet> synsets, String relationName, SynSet result, TreeItem resultWithPosItem,
+                                                 TreeData<TreeItem> treeData, Set<String> leaves) {
+        if (synsets.size() > 0) {
+            TreeItem resultItem = new TreeItem(relationName + " of " + result.representative(), result.getId());
+            treeData.addItem(resultWithPosItem, resultItem);
+            for (SynSet synset : synsets) {
+                TreeItem synsetItem = new TreeItem(synset.representative(), synset.getId());
+                treeData.addItem(resultItem, synsetItem);
+                leaves.add(synsetItem.toString());
+            }
+
+        }
+    }
+
+    private static void searchRelation(SynSet result, SemanticRelationType relationType, TreeItem resultWithPosItem,
+                                       TreeData<TreeItem> treeData, Set<String> leaves) {
+        ArrayList<SynSet> synSets = new ArrayList<>();
+        for (int i = 0; i < result.relationSize(); i++) {
+            Relation relation = result.getRelation(i);
+            System.out.println(relation.getName() + " " + relation);
+            if (relation instanceof SemanticRelation) {
+                if (((SemanticRelation) relation).getRelationType().equals(relationType)) {
+                    synSets.add(turkish.getSynSetWithId(relation.getName()));
+                }
+            }
+        }
+        String relationName = relationType.toString().toLowerCase().replace("_", " ");
+        relationName = relationName.substring(0, 1).toUpperCase() + relationName.substring(1) + "s";
+        addRelationSynsetsToTree(synSets, relationName, result, resultWithPosItem, treeData, leaves);
+    }
+
     static void searchInWordnet(String searchLiteral, TreeData<TreeItem> treeData, TreeDataProvider<TreeItem> inMemoryDataProvider,
                                 Set<String> leaves) {
         treeData.clear();
         inMemoryDataProvider.refreshAll();
-//        debugTextField.setValue("I am clicked2");
         ArrayList<SynSet> results = turkish.getSynSetsWithLiteral(searchLiteral);
-//        debugTextField.setValue(debugTextField.getValue() + " " + searchBox.getSearchLiteral() + " " + results.size());
 
-        Set<String> posList = new HashSet<>();
         for (SynSet result : results) {
             String example = result.getExample();
             String pos = result.getPos().toString();
@@ -34,77 +68,16 @@ class Utils {
                 synsetString += " \"" + example + "\"";
             }
             TreeItem resultWithPosItem = new TreeItem(synsetString, result.getId());
-            System.out.println("posItem" + resultWithPosItem.toString());
-            //if (!posList.contains(pos)) {
             treeData.addItem(null, resultWithPosItem);
-                posList.add(pos);
-            //}
-            //TreeItem synsetItem = new TreeItem(synsetString, "");
-            //treeData.addItem(resultWithPosItem, synsetItem);
 
-            int relSize = result.relationSize();
-            if (relSize > 0) {
-                System.out.println("Relations:");
-                ArrayList<SynSet> hypernyms = new ArrayList<>();
-                ArrayList<SynSet> hyponyms = new ArrayList<>();
-                ArrayList<SynSet> antonyms = new ArrayList<>();
-                for (int j = 0; j < relSize; j++) {
-                    Relation relation = result.getRelation(j);
-                    System.out.println(relation.getName() + " " + relation);
-                    if (relation instanceof SemanticRelation) {
-                        if (((SemanticRelation) relation).getRelationType().equals(SemanticRelationType.HYPERNYM)) {
-                            hypernyms.add(turkish.getSynSetWithId(relation.getName()));
-                        } else if (((SemanticRelation) relation).getRelationType().
-                                equals(SemanticRelationType.HYPONYM)) {
-                            hyponyms.add(turkish.getSynSetWithId(relation.getName()));
-                        } else if (((SemanticRelation) relation).getRelationType().
-                                equals(SemanticRelationType.ANTONYM)) {
-                            antonyms.add(turkish.getSynSetWithId(relation.getName()));
-                        }
-                    }
-                }
-
-                if (hypernyms.size() > 0) {
-                    System.out.println("Hypernyms: " + synsetString);
-                    System.out.println("Synset strıng ıs:" + synsetString);
-                    System.out.println("Its child is:" + result.representative());
-                    TreeItem resultItem = new TreeItem("Hypernyms of " + result.representative(), result.getId());
-                    treeData.addItem(resultWithPosItem, resultItem);
-                    for (SynSet hypernym : hypernyms) {
-                        System.out.println(hypernym.representative());
-                        TreeItem hypernymItem = new TreeItem(hypernym.representative(), hypernym.getId());
-                        treeData.addItem(resultItem, hypernymItem);
-                        leaves.add(hypernymItem.toString());
-                    }
-
-                }
-
-                if (hyponyms.size() > 0) {
-                    System.out.println("Hyponyms of : " + synsetString);
-                    TreeItem resultItem = new TreeItem("Hyponyms of " + result.representative(),
-                            result.getId());
-                    treeData.addItem(resultWithPosItem, resultItem);
-                    for (SynSet hyponym : hyponyms) {
-                        System.out.println(hyponym.representative());
-                        TreeItem hyponymItem = new TreeItem(hyponym.representative(), hyponym.getId());
-                        treeData.addItem(resultItem, hyponymItem);
-                        leaves.add(hyponymItem.toString());
-                    }
-
-                }
-
-                if (antonyms.size() > 0) {
-                    System.out.println("Antonyms of : " + synsetString);
-                    TreeItem resultItem = new TreeItem("Antonyms of " + result.representative(), result.getId());
-                    treeData.addItem(resultWithPosItem, resultItem);
-                    for (SynSet antonym : antonyms) {
-                        System.out.println(antonym.representative() + "-" + antonym.getId());
-                        TreeItem antonymItem = new TreeItem(antonym.representative(), antonym.getId());
-                        treeData.addItem(resultItem, antonymItem);
-                        leaves.add(antonymItem.toString());
-                    }
+            if (result.relationSize() > 0) {
+                for (SemanticRelationType relationType : RELATIONS_TO_DISPLAY) {
+                    searchRelation(result, relationType, resultWithPosItem, treeData, leaves);
                 }
             }
+            ArrayList<SynSet> interlingualResults = result.getInterlingual(english);
+            addRelationSynsetsToTree(interlingualResults, "English", result, resultWithPosItem,
+                    treeData, leaves);
         }
         inMemoryDataProvider.refreshAll();
     }

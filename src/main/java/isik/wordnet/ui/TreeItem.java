@@ -14,13 +14,6 @@ public class TreeItem {
         lastAssignedID = this.assignedID;
     }
 
-    public String getRepresentative() {
-        return representative;
-    }
-
-    public String getWordNetID() {
-        return wordNetID;
-    }
 
     @Override
     public boolean equals(Object t) {

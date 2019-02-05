@@ -30,11 +30,12 @@ import static isik.wordnet.ui.Utils.searchInWordnet;
 @Theme("mytheme")
 public class WordNetUI extends UI {
 
-    static WordNet turkish;
+    static WordNet turkish, english;
 
     @Override
     protected void init(VaadinRequest vaadinRequest) {
         turkish = new WordNet();
+        english = new WordNet("english_wordnet_version_31.xml");
         VerticalLayout wrapper = new VerticalLayout();
         SearchBox searchBox = new SearchBox("Enter Your Word", VaadinIcons.SEARCH);
 //        TextField searchBox = new TextField("Enter your word");
