@@ -44,14 +44,14 @@ public class WordNetUI extends UI {
         TreeData<TreeItem> treeData = new TreeData<>();
         TreeDataProvider<TreeItem> inMemoryDataProvider = new TreeDataProvider<>(treeData);
         tree.setDataProvider(inMemoryDataProvider);
-        Set<String> leaves = new HashSet<>();
-//        Set<String> englishLeaves = new HashSet<>();
+        Set<String> turkishLeaves = new HashSet<>();
+        Set<String> englishLeaves = new HashSet<>();
 
         searchBtn.addClickListener(new Button.ClickListener() {
             @Override
             public void buttonClick(Button.ClickEvent clickEvent) {
                 String searchLiteral = searchBox.getSearchLiteral();
-                searchInWordnet(searchLiteral, treeData, inMemoryDataProvider, leaves);
+                searchInWordnet(searchLiteral, treeData, inMemoryDataProvider, turkishLeaves, englishLeaves);
                 searchBox.setSearchLiteral(searchLiteral);
             }
         });
@@ -60,12 +60,18 @@ public class WordNetUI extends UI {
             @Override
             public void itemClick(Tree.ItemClick itemClick) {
                 String searchLiteral = itemClick.getItem().toString();
-                if (leaves.contains(searchLiteral)) {
+                if (turkishLeaves.contains(searchLiteral)) {
                     searchLiteral = searchLiteral.split("-")[0];
-                    searchInWordnet(searchLiteral, treeData, inMemoryDataProvider, leaves);
+                    searchInWordnet(searchLiteral, treeData, inMemoryDataProvider, turkishLeaves, englishLeaves);
                     searchBox.setSearchLiteral(searchLiteral);
+                } else if (englishLeaves.contains(searchLiteral)) {
+                    String baseURL = "http://wordnetweb.princeton.edu/perl/webwn?s=";
+                    String modifiedLiteral = searchLiteral.substring(0, searchLiteral.indexOf("ENG") - 1).
+                            replace(" ", "+");
+                    String searchURL = baseURL + modifiedLiteral;
+                    getUI().getPage().open(searchURL, "_blank", true);
                 }
-                //getUI().getPage().open("http://google.com", "_blank");
+
             }
         });
 

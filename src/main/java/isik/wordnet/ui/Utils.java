@@ -50,9 +50,11 @@ class Utils {
     }
 
     static void searchInWordnet(String searchLiteral, TreeData<TreeItem> treeData, TreeDataProvider<TreeItem> inMemoryDataProvider,
-                                Set<String> leaves) {
+                                Set<String> turkishLeaves, Set<String> englishLeaves) {
         treeData.clear();
         inMemoryDataProvider.refreshAll();
+        turkishLeaves.clear();
+        englishLeaves.clear();
         ArrayList<SynSet> results = turkish.getSynSetsWithLiteral(searchLiteral);
 
         for (SynSet result : results) {
@@ -79,18 +81,18 @@ class Utils {
                     if (!synonym.equals(result.representative())) {
                         TreeItem synsetItem = new TreeItem(synonym, result.getId());
                         treeData.addItem(resultItem, synsetItem);
-                        leaves.add(synsetItem.toString());
+                        turkishLeaves.add(synsetItem.toString());
                     }
                 }
             }
             if (result.relationSize() > 0) {
                 for (SemanticRelationType relationType : RELATIONS_TO_DISPLAY) {
-                    searchRelation(result, relationType, resultWithPosItem, treeData, leaves);
+                    searchRelation(result, relationType, resultWithPosItem, treeData, turkishLeaves);
                 }
             }
             ArrayList<SynSet> interlingualResults = result.getInterlingual(english);
             addRelationSynsetsToTree(interlingualResults, "English", result, resultWithPosItem,
-                    treeData, leaves);
+                    treeData, englishLeaves);
         }
         inMemoryDataProvider.refreshAll();
     }
