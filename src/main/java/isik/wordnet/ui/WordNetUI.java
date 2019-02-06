@@ -34,8 +34,8 @@ public class WordNetUI extends UI {
 
     @Override
     protected void init(VaadinRequest vaadinRequest) {
-        turkish = new WordNet();
-        english = new WordNet("english_wordnet_version_31.xml");
+        turkish = WordNetService.getTurkishWordNet();
+        english = WordNetService.getEnglishWordNet();
         VerticalLayout wrapper = new VerticalLayout();
         SearchBox searchBox = new SearchBox("Enter Your Word", VaadinIcons.SEARCH);
 //        TextField searchBox = new TextField("Enter your word");
