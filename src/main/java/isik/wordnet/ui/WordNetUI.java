@@ -38,18 +38,14 @@ public class WordNetUI extends UI {
         english = WordNetService.getEnglishWordNet();
         VerticalLayout wrapper = new VerticalLayout();
         SearchBox searchBox = new SearchBox("Enter Your Word", VaadinIcons.SEARCH);
-//        TextField searchBox = new TextField("Enter your word");
-//        Button searchBtn = new Button("Search");
-//        search.addComponents(searchBox, searchBtn);
         Button searchBtn = searchBox.getButton();
-//        TextField debugTextField = new TextField();
 
         Tree<TreeItem> tree = new Tree<>();
         TreeData<TreeItem> treeData = new TreeData<>();
         TreeDataProvider<TreeItem> inMemoryDataProvider = new TreeDataProvider<>(treeData);
         tree.setDataProvider(inMemoryDataProvider);
         Set<String> leaves = new HashSet<>();
-
+//        Set<String> englishLeaves = new HashSet<>();
 
         searchBtn.addClickListener(new Button.ClickListener() {
             @Override
@@ -69,6 +65,7 @@ public class WordNetUI extends UI {
                     searchInWordnet(searchLiteral, treeData, inMemoryDataProvider, leaves);
                     searchBox.setSearchLiteral(searchLiteral);
                 }
+                //getUI().getPage().open("http://google.com", "_blank");
             }
         });
 

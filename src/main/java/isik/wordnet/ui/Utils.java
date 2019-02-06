@@ -1,9 +1,6 @@
 package isik.wordnet.ui;
 
-import WordNet.Relation;
-import WordNet.SemanticRelation;
-import WordNet.SemanticRelationType;
-import WordNet.SynSet;
+import WordNet.*;
 import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.TreeDataProvider;
 
@@ -15,10 +12,11 @@ import static isik.wordnet.ui.WordNetUI.turkish;
 
 class Utils {
     private static SemanticRelationType[] RELATIONS_TO_DISPLAY = {SemanticRelationType.HYPERNYM,
-            SemanticRelationType.HYPONYM, SemanticRelationType.ANTONYM, SemanticRelationType.ALSO_SEE,
+            SemanticRelationType.HYPONYM, SemanticRelationType.INSTANCE_HYPERNYM, SemanticRelationType.INSTANCE_HYPONYM,
+            SemanticRelationType.ANTONYM, SemanticRelationType.ALSO_SEE,
             SemanticRelationType.MEMBER_HOLONYM, SemanticRelationType.SUBSTANCE_HOLONYM, SemanticRelationType.PART_HOLONYM,
             SemanticRelationType.MEMBER_MERONYM, SemanticRelationType.SUBSTANCE_MERONYM, SemanticRelationType.PART_MERONYM,
-            SemanticRelationType.DOMAIN_TOPIC, SemanticRelationType.INSTANCE_HYPERNYM};
+            SemanticRelationType.DOMAIN_TOPIC};
 
     private static void addRelationSynsetsToTree(ArrayList<SynSet> synsets, String relationName, SynSet result, TreeItem resultWithPosItem,
                                                  TreeData<TreeItem> treeData, Set<String> leaves) {
@@ -70,6 +68,21 @@ class Utils {
             TreeItem resultWithPosItem = new TreeItem(synsetString, result.getId());
             treeData.addItem(null, resultWithPosItem);
 
+            System.out.println("Synonyms are " + result.getSynonym());
+            Synonym synonyms = result.getSynonym();
+            int synonymCount = synonyms.literalSize();
+            if (synonymCount > 1) {
+                TreeItem resultItem = new TreeItem("Synonyms" + " of " + result.representative(), result.getId());
+                treeData.addItem(resultWithPosItem, resultItem);
+                for (int i = 0; i < synonymCount; i++) {
+                    String synonym = synonyms.getLiteral(i).getName();
+                    if (!synonym.equals(result.representative())) {
+                        TreeItem synsetItem = new TreeItem(synonym, result.getId());
+                        treeData.addItem(resultItem, synsetItem);
+                        leaves.add(synsetItem.toString());
+                    }
+                }
+            }
             if (result.relationSize() > 0) {
                 for (SemanticRelationType relationType : RELATIONS_TO_DISPLAY) {
                     searchRelation(result, relationType, resultWithPosItem, treeData, leaves);
